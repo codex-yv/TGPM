@@ -1,0 +1,29 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: tirtghumo-redis
+    ports:
+      - "6379:6379"
+    
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: 
+      - redis-data:/data
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: tirthghumo-postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tirthghumoPackage
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  postgres_data:

@@ -2,38 +2,35 @@ from schemas.package import PackageSchema
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import exc, Select, Delete
+from typing import List
 import json
 
 from database.models import Packages, PackageImages
 
-async def db_add_packages(images: UploadFile, data: str, db: Session) -> dict:
+async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> dict:
     # converting string to object on PackageSchema
     data = PackageSchema.model_validate(json.loads(data))
 
     ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"} 
     image_ids = []
     if images:
-        # TODO: Implement a for loop for multiple image
-        ## currently take only one image.
-        ### swagger UI does not support multiple file selection.
-        
-        if images.content_type not in ALLOWED_TYPES:
-            raise HTTPException(
-                    status_code=400,
-                    detail=f"{images.filename} is not a supported image"
-                )
-        # TODO: Implement a for loop for each image
+        for image in images:
+            if image.content_type not in ALLOWED_TYPES:
+                raise HTTPException(
+                        status_code=400,
+                        detail=f"{image.filename} is not a supported image"
+                    )
 
-        image_byte = await images.read()
+            image_byte = await image.read()
 
-        image_model = PackageImages(
-            image_bin = image_byte
-        )
+            image_model = PackageImages(
+                image_bin = image_byte
+            )
 
-        db.add(image_model)
-        db.flush()
+            db.add(image_model)
+            db.flush()
 
-        image_ids.append(image_model.id)
+            image_ids.append(image_model.id)
 
     if not data.image_id:
         data.image_id = image_ids

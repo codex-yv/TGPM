@@ -6,15 +6,20 @@ from typing import List
 import json
 
 from database.configs import REDIS, engine, Base, get_db_depends
-from database.models import Packages
 
 from utils.package import db_add_packages
 
-from schemas.package import PackageSchema
-from schemas.responses import PackagePostResponse, PackageGetResponse
+from schemas.responses import PackagePostResponse
+
+from routes.public import router as public_router
+from routes.admin import router as private_router
+
 
 app = FastAPI()
 Base.metadata.create_all(engine)
+
+app.include_router(public_router)
+app.include_router(private_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,32 +50,6 @@ def getServerHealth():
         "pg_status": "UP" if pg else "DOWN"
     }
 
-
-@app.get('/packages', response_model = list[PackageGetResponse])
-async def getTourPackages(db: Session = Depends(get_db_depends)):
-    data = db.query(Packages).all()
-    print(data)
-
-    return data
-
-# List[UploadFile] = File(...)
-@app.post('/package', response_model = PackagePostResponse)
-async def postTourPackages(images: UploadFile | None = File(None),
-                           data: str = Form(...),
-                           db: Session = Depends(get_db_depends)):
-    # image_id = []
-    # for image in images:
-    #     image_byte = await image.read()
-
-    #     image_model = PackageImages(
-    #         image_bin = image_byte
-    #     )
-
-    #     db.add(image_model)
-    #     image_id.append(image_model.id)
-    result = await db_add_packages(images=images, data = data, db = db)
-    return PackagePostResponse(**result)
-    
 
 
 

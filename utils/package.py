@@ -13,6 +13,10 @@ async def db_add_packages(images: UploadFile, data: str, db: Session) -> dict:
     ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"} 
     image_ids = []
     if images:
+        # TODO: Implement a for loop for multiple image
+        ## currently take only one image.
+        ### swagger UI does not support multiple file selection.
+        
         if images.content_type not in ALLOWED_TYPES:
             raise HTTPException(
                     status_code=400,

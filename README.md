@@ -1,0 +1,1 @@
+ docker exec -it tirthghumo-postgres psql -U postgres -d tirthghumoPackage

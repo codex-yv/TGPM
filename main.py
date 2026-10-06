@@ -1,11 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+from typing import List
+import json
 
+from database.configs import REDIS, engine, Base, get_db_depends
+from database.models import Packages
 
-from database.configs import REDIS, engine
+from utils.package import db_add_packages
+
+from schemas.package import PackageSchema
+from schemas.responses import PackagePostResponse, PackageGetResponse
 
 app = FastAPI()
+Base.metadata.create_all(engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,3 +44,35 @@ def getServerHealth():
         "redis_Status": "UP" if r else "DOWN",
         "pg_status": "UP" if pg else "DOWN"
     }
+
+
+@app.get('/packages', response_model = list[PackageGetResponse])
+async def getTourPackages(db: Session = Depends(get_db_depends)):
+    data = db.query(Packages).all()
+    print(data)
+
+    return data
+
+# List[UploadFile] = File(...)
+@app.post('/package', response_model = PackagePostResponse)
+async def postTourPackages(images: UploadFile | None = File(None),
+                           data: str = Form(...),
+                           db: Session = Depends(get_db_depends)):
+    # image_id = []
+    # for image in images:
+    #     image_byte = await image.read()
+
+    #     image_model = PackageImages(
+    #         image_bin = image_byte
+    #     )
+
+    #     db.add(image_model)
+    #     image_id.append(image_model.id)
+    result = await db_add_packages(images=images, data = data, db = db)
+    return PackagePostResponse(**result)
+    
+
+
+
+
+    

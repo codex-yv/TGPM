@@ -6,7 +6,7 @@ class Packages(Base):
 
     id = Column(Integer, Sequence("package_id_seq", start=1000), primary_key = True, index = True)
     package_name = Column(String, unique = True, index = True)
-    destination = Column(String, index = True)
+    destination_id = Column(String, index = True) # FORMAT: "[107, 113, ...]"
     description  = Column(String)
     duration = Column(Integer, index = True)
     price = Column(Double, index = True)
@@ -23,6 +23,14 @@ class Categories(Base):
 
     id = Column(Integer, Sequence("category_seq_id", start = 100), primary_key = True, index = True)
     category_text = Column(String)
+
+class Destinations(Base):
+    __tablename__ = 'destinations'
+
+    id = Column(Integer, Sequence("category_seq_id", start = 100), primary_key = True, index = True)
+    category_text = Column(String)
+
+    destination_text = Column(String, index = True)
 
 # we can use cloud to store images use their urls (good for production)
 # eg. Cloudinary

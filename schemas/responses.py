@@ -6,6 +6,23 @@ class PackagePostResponse(BaseModel):
     message: str
     data: int | None = None
 
+class CategoryPostResponse(BaseModel):
+    status: bool
+    message: str
+    data: int | None = None
+
+class CategoriesGetResponse(BaseModel):
+    id: int
+    category_text: str
+
+    @field_validator('category_text')
+    @classmethod
+    def normalize_cat(cls, value:str):
+        return value.title().replace('_', ' ')
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class PackageGetResponse(BaseModel):
     id: int
     package_name: str

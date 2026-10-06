@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict
 
 class PackageSchema(BaseModel):
@@ -14,7 +14,14 @@ class PackageSchema(BaseModel):
     image_id: List[int] | None = None
 
 class CategorySchema(BaseModel):
-    categories: List[str]
+    category: str
+
+    @field_validator('category')
+    @classmethod
+    def formatted_cat(cls, value:str):
+        return value.lower().strip().replace(' ', '_')
+
+
 
 class DestinationSchema(BaseModel):
     destination_text: List[int]

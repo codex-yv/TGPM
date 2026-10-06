@@ -22,20 +22,21 @@ class Categories(Base):
     __tablename__ = 'categories'
 
     id = Column(Integer, Sequence("category_seq_id", start = 100), primary_key = True, index = True)
-    category_text = Column(String)
+    category_text = Column(String, unique = True)
 
 class Destinations(Base):
     __tablename__ = 'destinations'
 
-    id = Column(Integer, Sequence("category_seq_id", start = 100), primary_key = True, index = True)
+    id = Column(Integer, Sequence("destination_seq_id", start = 100), primary_key = True, index = True)
     category_text = Column(String)
 
     destination_text = Column(String, index = True)
 
 # we can use cloud to store images use their urls (good for production)
 # eg. Cloudinary
+# we can use vps for greater controll and save the image path
 # currently storing in db as binary
 class PackageImages(Base):
     __tablename__ = 'images'
-    id  = Column(Integer, Sequence("category_seq_id", start = 100), primary_key = True, index = True)
+    id  = Column(Integer, Sequence("image_seq_id", start = 100), primary_key = True, index = True)
     image_bin = Column(LargeBinary) 

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from database.models import Packages, Categories
+from database.models import Packages, Categories, Destinations
 from database.configs import get_db_depends
 
-from schemas.responses import PackageGetResponse, CategoriesGetResponse
+from schemas.responses import PackageGetResponse, CategoriesGetResponse, DestinationGetResponse
 
 
 router = APIRouter(prefix='/api/public', tags=["Public APIs"])
@@ -19,4 +19,10 @@ async def getTourPackages(db: Session = Depends(get_db_depends)):
 @router.get('/categories', response_model = list[CategoriesGetResponse])
 async def getCategories(db: Session = Depends(get_db_depends)):
     data = db.query(Categories).all()
+    return data
+
+
+@router.get('/destinations', response_model = list[DestinationGetResponse])
+async def getCategories(db: Session = Depends(get_db_depends)):
+    data = db.query(Destinations).all()
     return data

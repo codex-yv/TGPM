@@ -28,9 +28,9 @@ class Destinations(Base):
     __tablename__ = 'destinations'
 
     id = Column(Integer, Sequence("destination_seq_id", start = 100), primary_key = True, index = True)
-    category_text = Column(String)
+    destination_text = Column(String, unique=True, index = True)
 
-    destination_text = Column(String, index = True)
+
 
 # we can use cloud to store images use their urls (good for production)
 # eg. Cloudinary

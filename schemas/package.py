@@ -22,7 +22,11 @@ class CategorySchema(BaseModel):
         return value.lower().strip().replace(' ', '_')
 
 
-
 class DestinationSchema(BaseModel):
-    destination_text: List[int]
+    destination_text: str
+    
+    @field_validator('destination_text')
+    @classmethod
+    def formatted_cat(cls, value:str):
+        return value.lower().strip().replace(' ', '_')
 

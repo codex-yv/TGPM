@@ -5,9 +5,9 @@ from sqlalchemy import exc, Select, Delete
 from typing import List
 import json
 
-from database.models import Packages, PackageImages, Categories
+from database.models import Packages, PackageImages, Categories, Destinations
 
-from schemas.package import CategorySchema
+from schemas.package import CategorySchema, DestinationSchema
 
 async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> dict:
     # converting string to object on PackageSchema
@@ -96,4 +96,28 @@ async def db_add_new_category(data: CategorySchema, db: Session) -> dict:
         "status":True,
         "message": "Created new category.",
         "data": category_model.id
+    }
+
+
+async def db_add_new_destination(data: DestinationSchema, db: Session) -> dict:
+    destination_model = Destinations(
+        destination_text = data.destination_text
+    )
+
+    try:
+        db.add(destination_model)
+        db.commit()
+        db.refresh(destination_model)
+    except exc.IntegrityError:
+        db.rollback()
+
+        return {
+            "status":False,
+            "message": "dupicate destination",
+            "data": None
+        }
+    return {
+        "status":True,
+        "message": "Created new destination.",
+        "data": destination_model.id
     }

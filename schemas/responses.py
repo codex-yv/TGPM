@@ -11,6 +11,11 @@ class CategoryPostResponse(BaseModel):
     message: str
     data: int | None = None
 
+class DestinationPostResponse(BaseModel):
+    status: bool
+    message: str
+    data: int | None = None
+
 class CategoriesGetResponse(BaseModel):
     id: int
     category_text: str
@@ -22,6 +27,16 @@ class CategoriesGetResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class DestinationGetResponse(BaseModel):
+    id: int
+    destination_text: str
+
+    @field_validator('destination_text')
+    @classmethod
+    def normalize_cat(cls, value:str):
+        return value.title().replace('_', ' ')
+
+    model_config = ConfigDict(from_attributes=True)
 
 class PackageGetResponse(BaseModel):
     id: int

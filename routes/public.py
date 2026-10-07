@@ -26,3 +26,8 @@ async def getCategories(db: Session = Depends(get_db_depends)):
 async def getCategories(db: Session = Depends(get_db_depends)):
     data = db.query(Destinations).all()
     return data
+
+@router.get('/package/{package_id}', response_model = PackageGetResponse | None)
+async def getPackageByID(package_id: int, db:Session = Depends(get_db_depends)):
+    data = db.query(Packages).filter(Packages.id == package_id).scalar()
+    return data

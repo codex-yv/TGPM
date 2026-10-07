@@ -4,10 +4,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import exc, Select, Delete, Update
 from typing import List
 import json
+import ast
 
 from database.models import Packages, PackageImages, Categories, Destinations
 
 from schemas.package import CategorySchema, DestinationSchema
+
+from utils.tasks import db_task_get_category_from_id, db_task_get_imagebin_from_id, db_task_get_destination_from_id
 
 async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> dict:
     # converting string to object on PackageSchema
@@ -26,7 +29,8 @@ async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> d
             image_byte = await image.read()
 
             image_model = PackageImages(
-                image_bin = image_byte
+                image_bin = image_byte,
+                mime_type = image.content_type
             )
 
             db.add(image_model)
@@ -144,4 +148,52 @@ async def db_toggle_package_status(data: int, db: Session):
         "message": f"Package status toggled!",
         "data": new_status
     }
-    
+
+
+async def db_get_package_by_package_id(package_id: int, db:Session) -> list | None:
+    data = db.query(Packages).filter(Packages.id == package_id).scalar()
+    image_bins = await db_task_get_imagebin_from_id(image_ids = ast.literal_eval(data.image_id), db=db)
+    categories = await db_task_get_category_from_id(cat_ids= ast.literal_eval(data.category_id), db=db)
+    destinations = await db_task_get_destination_from_id(des_ids= ast.literal_eval(data.destination_id), db=db)
+
+    package = {
+        "id": data.id,
+        "package_name": data.package_name,
+        "destinations": destinations,
+        "description": data.description,
+        "duration": data.duration,
+        "price": data.price,
+        "categories": categories,
+        "itinerary": ast.literal_eval(data.itinerary),
+        "inclusions": ast.literal_eval(data.inclusions),
+        "exclusions": ast.literal_eval(data.exclusions),
+        "images": image_bins,
+        "status": data.status,
+    }
+
+    return package
+
+async def db_get_all_package(db:Session):
+    packages = []
+    datas = db.query(Packages).all()
+    for data in datas:
+        image_bins = await db_task_get_imagebin_from_id(image_ids = ast.literal_eval(data.image_id), db=db)
+        categories = await db_task_get_category_from_id(cat_ids= ast.literal_eval(data.category_id), db=db)
+        destinations = await db_task_get_destination_from_id(des_ids= ast.literal_eval(data.destination_id), db=db)
+        package = {
+            "id": data.id,
+            "package_name": data.package_name,
+            "destinations": destinations,
+            "description": data.description,
+            "duration": data.duration,
+            "price": data.price,
+            "categories": categories,
+            "itinerary": ast.literal_eval(data.itinerary),
+            "inclusions": ast.literal_eval(data.inclusions),
+            "exclusions": ast.literal_eval(data.exclusions),
+            "images": image_bins,
+            "status": data.status,
+        }
+        packages.append(package)
+
+    return packages

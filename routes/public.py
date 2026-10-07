@@ -6,12 +6,15 @@ from database.configs import get_db_depends
 
 from schemas.responses import PackageGetResponse, CategoriesGetResponse, DestinationGetResponse
 
+from utils.package import db_get_package_by_package_id, db_get_all_package
+
+import ast
 
 router = APIRouter(prefix='/api/public', tags=["Public APIs"])
 
 @router.get('/packages', response_model = list[PackageGetResponse])
 async def getTourPackages(db: Session = Depends(get_db_depends)):
-    data = db.query(Packages).all()
+    data = await db_get_all_package(db = db)
 
     return data
 
@@ -29,5 +32,5 @@ async def getCategories(db: Session = Depends(get_db_depends)):
 
 @router.get('/package/{package_id}', response_model = PackageGetResponse | None)
 async def getPackageByID(package_id: int, db:Session = Depends(get_db_depends)):
-    data = db.query(Packages).filter(Packages.id == package_id).scalar()
+    data = await db_get_package_by_package_id(package_id=package_id, db=db)
     return data

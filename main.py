@@ -15,7 +15,9 @@ from routes.public import router as public_router
 from routes.admin import router as private_router
 
 
-app = FastAPI()
+app = FastAPI(
+    title = "Tour Package Management API",
+)
 Base.metadata.create_all(engine)
 
 app.include_router(public_router)
@@ -49,9 +51,3 @@ def getServerHealth():
         "redis_Status": "UP" if r else "DOWN",
         "pg_status": "UP" if pg else "DOWN"
     }
-
-
-
-
-
-    

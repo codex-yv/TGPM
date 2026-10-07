@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, field_validator
-from typing import List,Dict
+from typing import List,Dict, Union, Tuple
 
 class PackagePostResponse(BaseModel):
     status: bool
@@ -47,15 +47,15 @@ class DestinationGetResponse(BaseModel):
 class PackageGetResponse(BaseModel):
     id: int
     package_name: str
-    destination_id: str
+    destinations: List[Union[str, None]]
     description : str
     duration: int
     price: float
-    category_id: str
-    itinerary: str
-    inclusions: str
-    exclusions: str
-    image_id: str
+    categories: List[Union[str, None]]
+    itinerary: Dict[str, List[str]]
+    inclusions: List[Union[str, None]]
+    exclusions: List[Union[str, None]]
+    images: List[str]
     status: bool
 
     @field_validator('package_name')

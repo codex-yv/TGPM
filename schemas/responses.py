@@ -16,6 +16,12 @@ class DestinationPostResponse(BaseModel):
     message: str
     data: int | None = None
 
+
+class ToggleResponse(BaseModel):
+    status: bool
+    message: str
+    data: bool | None = None
+
 class CategoriesGetResponse(BaseModel):
     id: int
     category_text: str
@@ -58,3 +64,4 @@ class PackageGetResponse(BaseModel):
         return value.replace("_", " ").title()
     
     model_config = ConfigDict(from_attributes=True)
+

@@ -30,3 +30,5 @@ class DestinationSchema(BaseModel):
     def formatted_cat(cls, value:str):
         return value.lower().strip().replace(' ', '_')
 
+class PackageToggleSchema(BaseModel):
+    package_id: int

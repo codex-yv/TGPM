@@ -1,7 +1,7 @@
 from schemas.package import PackageSchema
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import exc, Select, Delete
+from sqlalchemy import exc, Select, Delete, Update
 from typing import List
 import json
 
@@ -121,3 +121,27 @@ async def db_add_new_destination(data: DestinationSchema, db: Session) -> dict:
         "message": "Created new destination.",
         "data": destination_model.id
     }
+
+async def db_toggle_package_status(data: int, db: Session):
+    stmt = Select(Packages.status).where(Packages.id == data)
+
+    result = db.execute(stmt).scalar_one_or_none()
+
+    if result == None:
+        return {
+            "status": False,
+            "message": f"ID: {data} not found in packages relation. ",
+            "data": None
+        }
+    
+    new_status = not result
+    upd_stmt = Update(Packages).where(Packages.id == data).values(status = new_status)
+    db.execute(upd_stmt)
+    db.commit()
+
+    return {
+        "status": True,
+        "message": f"Package status toggled!",
+        "data": new_status
+    }
+    

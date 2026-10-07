@@ -24,6 +24,7 @@ async def postTourPackages(images: List[UploadFile] | None = File(None),
 @router.post('/categories', response_model = CategoryPostResponse)
 async def createCategory(data: CategorySchema, db: Session = Depends(get_db_depends)):
     result = await db_add_new_category(data = data, db = db)
+    print(result)
     return CategoryPostResponse(**result)
 
 # TODO: update it to accept multiple des

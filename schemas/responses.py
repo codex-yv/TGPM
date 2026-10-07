@@ -9,12 +9,12 @@ class PackagePostResponse(BaseModel):
 class CategoryPostResponse(BaseModel):
     status: bool
     message: str
-    data: int | None = None
+    data: List[int] | None = None
 
 class DestinationPostResponse(BaseModel):
     status: bool
     message: str
-    data: int | None = None
+    data: List[int] | None = None
 
 
 class ToggleResponse(BaseModel):

@@ -11,6 +11,7 @@ from database.models import Packages, PackageImages, Categories, Destinations
 from schemas.package import CategorySchema, DestinationSchema
 
 from utils.tasks import db_task_get_category_from_id, db_task_get_imagebin_from_id, db_task_get_destination_from_id
+from utils.validations import db_validate_categories_id, db_validate_destinations_id, db_validate_image_id
 
 async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> dict:
     # converting string to object on PackageSchema
@@ -41,17 +42,33 @@ async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> d
     if not data.image_id:
         data.image_id = image_ids
     else:
-        # TODO: check if image id in data.image_id exist
-        data.image_id = list(set(data.image + image_ids))
+        valid_img_id_data = await db_validate_image_id(img_ids= data.image_id, db=db)
+        print(valid_img_id_data)
+        if not valid_img_id_data['status']:
+            return {
+                "status":False,
+                "message": valid_img_id_data['message'],
+                "data": None
+            }
+        data.image_id = list(set(data.image_id + image_ids))
 
+    #$#  validating destination and category id before inserting in package.
+    valid_des_id_data = await db_validate_destinations_id(des_ids= data.destination_id, db=db)
+    valid_cat_id_data = await db_validate_categories_id(cat_ids= data.category_id, db=db)
+    if not (valid_des_id_data['status'] and valid_cat_id_data['status']) :
+        return {
+            "status":False,
+            "message": valid_des_id_data['message'] if not valid_des_id_data['status'] else valid_cat_id_data['message'],
+            "data": None
+        }
 
     package_model = Packages(
         package_name = data.package_name.lower().strip().replace(' ', '_'),
-        destination_id = str(data.destination_id), # TODO: Check if destination_id exist
+        destination_id = str(data.destination_id),
         description = data.description,
         duration = data.duration,
         price = data.price,
-        category_id = str(data.category_id), # TODO: check if category id exist
+        category_id = str(data.category_id), 
         itinerary = str(data.itinerary),
         inclusions = str(data.inclusions),
         exclusions = str(data.exclusions),
@@ -80,50 +97,61 @@ async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> d
 
 
 async def db_add_new_category(data: CategorySchema, db: Session) -> dict:
-    category_model = Categories(
-        category_text = data.category
-    )
+    cat_id = []
+    for cat in data.category:
+        category_model = Categories(
+            category_text = cat
+        )
 
-    try:
-        db.add(category_model)
-        db.commit()
-        db.refresh(category_model)
-    except exc.IntegrityError:
-        db.rollback()
+        try:
+            db.add(category_model)
+            db.flush()
+            cat_id.append(category_model.id)
 
-        return {
-            "status":False,
-            "message": "dupicate category",
-            "data": None
-        }
+        except (exc.IntegrityError):
+            db.rollback()
+
+            return {
+                "status":False,
+                "message": f"Category: {cat} - already exist. ",
+                "data": None
+            }
+        
+    db.commit()
     return {
         "status":True,
-        "message": "Created new category.",
-        "data": category_model.id
+        "message": "Created new categories.",
+        "data": cat_id
     }
 
 
 async def db_add_new_destination(data: DestinationSchema, db: Session) -> dict:
-    destination_model = Destinations(
-        destination_text = data.destination_text
-    )
+    des_id = []
 
-    try:
-        db.add(destination_model)
-        db.commit()
-        db.refresh(destination_model)
-    except exc.IntegrityError:
-        db.rollback()
+    for des in data.destination_text:
 
-        return {
-            "status":False,
-            "message": "dupicate destination",
-            "data": None
-        }
+        destination_model = Destinations(
+            destination_text = des
+        )
+
+        try:
+            db.add(destination_model)
+            db.flush()
+            des_id.append(destination_model.id)
+        except exc.IntegrityError:
+            db.rollback()
+
+            return {
+                "status":False,
+                "message": f"Destination: {des} - already exist.",
+                "data": None
+            }
+        
+    db.commit()
     return {
         "status":True,
         "message": "Created new destination.",
-        "data": destination_model.id
+        "data": des_id
     }
 
 async def db_toggle_package_status(data: int, db: Session):

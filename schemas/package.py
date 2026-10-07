@@ -14,21 +14,26 @@ class PackageSchema(BaseModel):
     image_id: List[int] | None = None
 
 class CategorySchema(BaseModel):
-    category: str
+    category: List[str]
 
     @field_validator('category')
     @classmethod
-    def formatted_cat(cls, value:str):
-        return value.lower().strip().replace(' ', '_')
-
+    def formatted_cat(cls, value:List[str]) -> list:
+        res = []
+        for val in value:
+            res.append(val.lower().strip().replace(' ', '_'))
+        return res
 
 class DestinationSchema(BaseModel):
-    destination_text: str
+    destination_text: List[str]
     
     @field_validator('destination_text')
     @classmethod
-    def formatted_cat(cls, value:str):
-        return value.lower().strip().replace(' ', '_')
+    def formatted_cat(cls, value:List[str]):
+        res = []
+        for val in value:
+            res.append(val.lower().strip().replace(' ', '_'))
+        return res
 
 class PackageToggleSchema(BaseModel):
     package_id: int

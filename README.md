@@ -1,4 +1,5 @@
 ### Overview:
+- API request authentication required for Private APIs(Production).
 - In this code the database operations are currently synchronus which can be updated to Ansynchronus
 
 - Currently images are being stored inside the database as `BYTEA` we can use cloud storage services like *Cloudinary* (easy to setup) to store image and use store URL in our database.
@@ -30,7 +31,7 @@
     ```
     ***Note:*** Make sure you have docker installed and configured.
 
-- `Optional:` Runn the below command in PowerShell to runn Postgress commands.
+- `Optional:` Run the below command in PowerShell to run Postgress commands.
     ```bash
     docker exec -it tirthghumo-postgres psql -U postgres -d tirthghumoPackage
     ```

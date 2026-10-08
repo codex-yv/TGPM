@@ -2,7 +2,7 @@ from schemas.package import PackageSchema
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import exc, Select, Delete, Update
-from typing import List
+from typing import List, Optional
 import json
 import ast
 
@@ -12,6 +12,64 @@ from schemas.package import CategorySchema, DestinationSchema, UpadtePackageSche
 
 from utils.tasks import db_task_get_category_from_id, db_task_get_imagebin_from_id, db_task_get_destination_from_id
 from utils.validations import db_validate_categories_id, db_validate_destinations_id, db_validate_image_id
+
+async def db_filter_packages(
+    db: Session,
+    destination_id: Optional[int] = None,
+    category_id: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    duration: Optional[int] = None,
+    availability: Optional[bool] = None
+) -> list:
+    query = db.query(Packages)
+
+    # destination_id is stored as a stringified list e.g. "[107, 113]"
+    # use LIKE to check if the given ID appears inside that string
+    if destination_id is not None:
+        query = query.filter(Packages.destination_id.like(f"%{destination_id}%"))
+
+    # same approach for category_id
+    if category_id is not None:
+        query = query.filter(Packages.category_id.like(f"%{category_id}%"))
+
+    if min_price is not None:
+        query = query.filter(Packages.price >= min_price)
+
+    if max_price is not None:
+        query = query.filter(Packages.price <= max_price)
+
+    if duration is not None:
+        query = query.filter(Packages.duration == duration)
+
+    if availability is not None:
+        query = query.filter(Packages.status == availability)
+
+    results = query.all()
+
+    packages = []
+    for data in results:
+        image_bins = await db_task_get_imagebin_from_id(image_ids=ast.literal_eval(data.image_id), db=db)
+        categories = await db_task_get_category_from_id(cat_ids=ast.literal_eval(data.category_id), db=db)
+        destinations = await db_task_get_destination_from_id(des_ids=ast.literal_eval(data.destination_id), db=db)
+
+        package = {
+            "id": data.id,
+            "package_name": data.package_name,
+            "destinations": destinations,
+            "description": data.description,
+            "duration": data.duration,
+            "price": data.price,
+            "categories": categories,
+            "itinerary": ast.literal_eval(data.itinerary),
+            "inclusions": ast.literal_eval(data.inclusions),
+            "exclusions": ast.literal_eval(data.exclusions),
+            "images": image_bins,
+            "status": data.status,
+        }
+        packages.append(package)
+
+    return packages
 
 async def db_add_packages(images: List[UploadFile], data: str, db: Session) -> dict:
     # converting string to object on PackageSchema

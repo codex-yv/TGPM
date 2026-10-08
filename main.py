@@ -1,19 +1,13 @@
-from fastapi import FastAPI, Depends, UploadFile, File, Form
+from fastapi import FastAPI, Depends, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from sqlalchemy.orm import Session
-from typing import List
-import json
 
-from database.configs import REDIS, engine, Base, get_db_depends
-
-from utils.package import db_add_packages
-
-from schemas.responses import PackagePostResponse
+from database.configs import REDIS, engine, Base
 
 from routes.public import router as public_router
 from routes.admin import router as private_router
 
+### Please refer to README before running the code.
 
 app = FastAPI(
     title = "Tour Package Management API",

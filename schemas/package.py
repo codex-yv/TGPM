@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class PackageSchema(BaseModel):
     package_name: str
@@ -37,3 +37,17 @@ class DestinationSchema(BaseModel):
 
 class PackageToggleSchema(BaseModel):
     package_id: int
+
+
+class UpadtePackageSchema(BaseModel):
+    package_id: Optional[int] = None
+    package_name: Optional[str] = None
+    destination_id: Optional[List[int]] = None
+    description : Optional[str] = None
+    duration: Optional[int]= Field(default=None, gt = 0, lt=30)
+    price: Optional[float ]= Field(default=None, gt=-1, description="The price should be greater than 0.")
+    category_id: Optional[List[int]] = None
+    itinerary: Optional[Dict[str, List[str]]] = None
+    inclusions: Optional[List[str]] = None
+    exclusions: Optional[List[str]] = None
+    image_id: Optional[List[int] | None] = None

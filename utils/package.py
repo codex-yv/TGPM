@@ -8,7 +8,7 @@ import ast
 
 from database.models import Packages, PackageImages, Categories, Destinations
 
-from schemas.package import CategorySchema, DestinationSchema
+from schemas.package import CategorySchema, DestinationSchema, UpadtePackageSchema
 
 from utils.tasks import db_task_get_category_from_id, db_task_get_imagebin_from_id, db_task_get_destination_from_id
 from utils.validations import db_validate_categories_id, db_validate_destinations_id, db_validate_image_id
@@ -225,3 +225,111 @@ async def db_get_all_package(db:Session):
         packages.append(package)
 
     return packages
+
+
+async def db_update_package(package_id:int, images: List[UploadFile] ,data: str, db:Session):
+    try:
+        data = UpadtePackageSchema.model_validate(json.loads(data))
+
+        package =  db.query(Packages).filter(Packages.id == package_id).first()
+
+        if not package:
+            raise HTTPException(status_code=404, detail="Package not found")
+        
+        ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"} 
+        image_ids = []
+        if images:
+            for image in images:
+                if image.content_type not in ALLOWED_TYPES:
+                    raise HTTPException(
+                            status_code=400,
+                            detail=f"{image.filename} is not a supported image"
+                        )
+
+                image_byte = await image.read()
+
+                image_model = PackageImages(
+                    image_bin = image_byte,
+                    mime_type = image.content_type
+                )
+
+                db.add(image_model)
+                db.flush()
+
+                image_ids.append(image_model.id)
+
+            if not data.image_id:
+                data.image_id = image_ids
+            else:
+                valid_img_id_data = await db_validate_image_id(img_ids= data.image_id, db=db)
+                print(valid_img_id_data)
+                if not valid_img_id_data['status']:
+                    return {
+                        "status":False,
+                        "message": valid_img_id_data['message'],
+                        "data": None
+                    }
+                data.image_id = list(set(data.image_id + image_ids))
+
+        update_data = data.model_dump(exclude_unset=True)
+
+
+        if "destination_id" in update_data:
+            valid_des_id_data = await db_validate_destinations_id(des_ids= data.destination_id, db=db)
+            if not valid_des_id_data['status']:
+                return {
+                    "status":False,
+                    "message": valid_des_id_data['message'],
+                    "data": None
+                }
+            
+            update_data["destination_id"] = str(update_data["destination_id"])
+
+        if "category_id" in update_data:
+            valid_cat_id_data = await db_validate_categories_id(cat_ids= data.category_id, db=db)
+            if not valid_cat_id_data['status']:
+                return {
+                    "status":False,
+                    "message": valid_cat_id_data['message'],
+                    "data": None
+                }
+            update_data["category_id"] = str(update_data["category_id"])
+
+        if "inclusions" in update_data:
+                update_data["category_id"] = str(update_data["category_id"])
+
+        if "exclusions" in update_data:
+                update_data["category_id"] = str(update_data["category_id"])
+
+        if "image_id" in update_data:
+            update_data["image_id"] = str(update_data["image_id"])
+
+        if "itinerary" in update_data:
+            update_data["itinerary"] = str(update_data["itinerary"])
+
+        
+        for field, value in update_data.items():
+            setattr(package, field, value)
+        try:
+            db.commit()
+            db.refresh(package)
+
+            return {
+                "status":True,
+                "message": "Field Update successfully.",
+                "data": package
+            }
+        except exc.IntegrityError:
+            db.rollback()
+            return {
+                "status":False,
+                "message": "The value you are trying to update already exist.",
+                "data": None
+            }
+    except Exception as e:
+        return {
+            "Status": False,
+            "message": f"Failed to update db due to: {e}",
+            "data": None
+        }
+

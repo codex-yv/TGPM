@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, field_validator
-from typing import List,Dict, Union, Tuple
+from typing import List,Dict, Union, Tuple, Any
 
 class PackagePostResponse(BaseModel):
     status: bool
@@ -21,6 +21,11 @@ class ToggleResponse(BaseModel):
     status: bool
     message: str
     data: bool | None = None
+
+class PackageUpdationResponse(BaseModel):
+    status: bool
+    message: str
+    data: Any = None
 
 class CategoriesGetResponse(BaseModel):
     id: int
